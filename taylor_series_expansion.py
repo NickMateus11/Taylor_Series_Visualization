@@ -1,17 +1,48 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from collections.abc import Sequence
+import function_plotter as fp
 
 
-def __find_approx_index(arr, val, l=None, r=None): # using binary search
+def _find_approx_index(arr, val, l=None, r=None): # using binary search
     if l is None: l = 0
     if r is None: r = len(arr)-1
     if l == r: return r
 
     mid = (l+r)//2
     if arr[mid] == val or (r-l == 1 and arr[l]<val and arr[r]>val): return mid
-    if arr[mid] < val:  return find_approx_index(arr, val, mid, r)
-    if arr[mid] > val:  return find_approx_index(arr, val, l, mid)
+    if arr[mid] < val:  return _find_approx_index(arr, val, mid, r)
+    if arr[mid] > val:  return _find_approx_index(arr, val, l, mid)
+
+
+class Taylor_Series():
+    def __init__(self, f, t, a):
+        self.a = a
+        self.f = f
+        self.t = t
+        self.dt = abs(self.t[0]-self.t[1])
+        self.N = 0
+        self.series = np.zeros( shape=len(self.t) )
+        self.derivatives = [self.f]
+        self.a_index = _find_approx_index(self.t,self.a)
+
+    def add_next_term(self):
+        _next = self._taylor_term(self.N+1)
+        self.series += _next
+        self.N += 1
+
+    def _taylor_term(self, n):
+
+        for i in range(self.N,n):
+            self.derivatives.append(np.gradient(self.derivatives[i],self.dt, edge_order=2))
+
+        n_term = np.zeros( shape=len(self.t), dtype=float )
+        for i in range(len(self.t)):
+            n_term[i] = self.derivatives[n-1][self.a_index] / np.math.factorial(n-1) * np.power(self.t[i]-self.a,n-1) 
+        
+        return n_term
+
+    def get_series(self):
+        return self.series
 
 
 def taylor(f, t, a, N):
@@ -24,7 +55,7 @@ def taylor(f, t, a, N):
     derivatives = [f]
     dx = abs(t[0]-t[1])
 
-    a_index = __find_approx_index(t, a, 0, len(t)-1)
+    a_index = _find_approx_index(t, a, 0, len(t)-1)
 
     for n in range(1,N):
         derivatives.append(np.gradient(derivatives[n-1],dx))
