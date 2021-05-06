@@ -26,29 +26,37 @@ def draw_grid(surface):
     pygame.draw.line(surface, GREY, (w/2,0), (w/2,h), linewidth*3)
     pygame.draw.line(surface, GREY, (0,h/2), (w,h/2), linewidth*3)
 
-def plot(screen, func, time_range=None, xlim=10, ylim=10, color=WHITE, width=2):
+def plot(screen, f, t, xlim=10, ylim=10, color=WHITE, width=2):
     x_scale_factor = min(w,h)/(2*xlim)
     y_scale_factor = min(w,h)/(2*ylim)
-
-    if time_range is None:
-        time_range = (-xlim, xlim)
     
-    if type(func) not in [list, tuple, np.ndarray]:
-        L = np.diff(time_range)
-        N = int(L*10)
-        t = (np.array([t for t in range(0,N)]) * L/N) + time_range[0]
-
-        f = func(t)
-    else:
-        t = np.array(time_range)
-        f = np.array(func)
+    t = np.array(t)
+    f = np.array(f)
 
     # scaled and adjust to screen coords
     t_adjusted = (t*x_scale_factor) + w//2
     f_adjusted = (-f*y_scale_factor) + h//2
 
     pygame.draw.lines(screen, color, False, list(zip(t_adjusted,f_adjusted)), width)
+
+
+def plot_points(func, time_range):
+    L = np.diff(time_range)
+    N = int(L*10)
+    t = (np.array([t for t in range(0,N)]) * L/N) + time_range[0]
+    f = func(t)
+
     return f,t
+
+
+class Plotter():
+    def __init__(self, screen, xlim, ylim):
+        self.screen = screen
+        self.xlim = xlim
+        self.ylim = ylim
+
+    def plot(self, f, t, color=WHITE, width=2):
+        plot(self.screen,f,t,self.xlim,self.ylim,color,width)
 
 
 def main():
@@ -64,9 +72,10 @@ def main():
         screen.fill(BLACK)
         draw_grid(screen)
 
-        f = lambda t: np.sin(t) + 1/2 * np.cos(2*t + np.pi/4)
+        func = lambda t: np.sin(t) + 1/2 * np.cos(2*t + np.pi/4)
         t_range = [-np.pi, np.pi]
-        plot(screen, func=f, time_range=t_range, xlim=5, ylim=2)
+        f,t = plot_points(func,t_range)
+        plot(screen, f, t, xlim=5, ylim=2)
 
         pygame.display.flip()
 

@@ -20,8 +20,15 @@ def main():
 
     fps = 1
 
-    taylor = None
+    xlim = 10
+    ylim = 2
+
     centered = 0
+    func = lambda t: np.sinc(t)
+    f,t = fp.plot_points(func, (-xlim,xlim))
+    taylor = ts.Taylor_Series(f,t,centered)
+
+    plotter = fp.Plotter(screen, xlim, ylim)
 
     running = True
     while running:
@@ -32,11 +39,9 @@ def main():
         screen.fill(BLACK)
         fp.draw_grid(screen)
 
-        f,t = fp.plot(screen, lambda t: np.sinc(t), xlim=10, ylim=2, color=LIGHTBLUE, width=4)
-        if not taylor:
-            taylor = ts.Taylor_Series(f,t,centered)
+        plotter.plot(f, t, color=LIGHTBLUE, width=4)
         taylor.add_next_term()
-        fp.plot(screen, taylor.get_series(), t, xlim=10, ylim=2, color=LIGHTRED)
+        plotter.plot(taylor.get_series(), t, color=LIGHTRED)
 
         pygame.display.flip()
         time.sleep(1/fps)
